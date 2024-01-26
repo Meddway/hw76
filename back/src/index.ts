@@ -26,25 +26,21 @@ app.post('/messages', async (req: Request, res: Response) => {
 });
 
 app.get('/messages', async (req: Request, res: Response) => {
-  const messages = await fileDb.getItems();
-  const last30Messages = messages.slice(0, 30);
+  if (req.query.datetime) {
+    const queryDate = req.query.datetime as string;
+    const date = new Date(queryDate);
+    if (isNaN(date.getTime())) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
 
-  res.json(last30Messages);
-});
-
-app.get('/messages', async (req: Request, res: Response) => {
-  const queryDate = req.query.datetime as string;
-
-  const parsedDate = new Date(queryDate);
-  if (isNaN(parsedDate.getDate())) {
-    return res.status(400).json({ error: 'Invalid date format' });
+    const messages = await fileDb.getItems();
+    const newMessages = messages.filter((msg) => new Date(msg.datetime) > date);
+    res.json(newMessages);
+  } else {
+    const messages = await fileDb.getItems();
+    const last30Messages = messages.slice(0, 30);
+    res.json(last30Messages);
   }
-
-  const messages = await fileDb.getItems();
-
-  const newMessages = messages.filter((msg) => new Date(msg.datetime) > parsedDate);
-
-  res.json(newMessages);
 });
 
 app.listen(port, () => {

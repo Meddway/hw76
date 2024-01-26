@@ -8,7 +8,7 @@ interface Message {
   datetime: string;
 }
 
-const filename = './db.json';
+const filename = '../db.json';
 let data: Message[] = [];
 
 const fileDb = {
