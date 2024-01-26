@@ -1,11 +1,13 @@
 import express, { Request, Response } from 'express';
 import fileDb from './fileDb';
 import crypto from 'crypto';
+import cors from 'cors';
 
 const app = express();
 const port = 8000;
 
 app.use(express.json());
+app.use(cors());
 
 fileDb.init();
 
@@ -42,6 +44,7 @@ app.get('/messages', async (req: Request, res: Response) => {
     res.json(last30Messages);
   }
 });
+
 
 app.listen(port, () => {
   console.log(`Server started on ${port} port!`);
