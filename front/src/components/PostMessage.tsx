@@ -1,10 +1,29 @@
 import React from 'react';
+import {Grid, Paper, Typography} from '@mui/material';
 
-const PostMessage: React.FC = () => {
+interface Props {
+  message: string;
+  author: string;
+  datetime: string;
+}
+
+const PostMessage: React.FC<Props> = ({ message, author, datetime }) => {
   return (
-    <div>
-      PostMessage
-    </div>
+    <Grid item xs={12}>
+      <Paper elevation={3} style={{ padding: '10px', marginBottom: '10px' }}>
+        <div>
+          <Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>
+            Author: {author}
+          </Typography>
+          <Typography variant="subtitle1">
+            Date: {datetime}
+          </Typography>
+        </div>
+        <Typography variant="body1">
+          Message: {message}
+        </Typography>
+      </Paper>
+    </Grid>
   );
 };
 

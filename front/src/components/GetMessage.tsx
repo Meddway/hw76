@@ -1,40 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import PostMessage from './PostMessage';
-import { Button } from '@mui/material';
-import dayjs from 'dayjs';
+import { Container } from '@mui/material';
 
-const url = 'http://localhost:8000/messages';
-
-interface Props {
+interface Message {
   id: string;
   message: string;
   author: string;
   datetime: string;
 }
 
-const GetMessages: React.FC<Props> = () => {
-  const [messagesUser, setMessagesUser] = useState<Props[]>([]);
+const GetMessages: React.FC = () => {
+  const [messagesUser, setMessagesUser] = useState<Message[]>([]);
   const [lastDate, setLastDate] = useState<string | null>(null);
 
   const generateRandomKey = () => Math.random().toString(36);
 
   const getMessages = async () => {
     try {
-      const urlWithDatetime = lastDate ? `${url}?datetime=${lastDate}` : url;
+      const urlWithDatetime = lastDate ? `http://localhost:8000/messages?datetime=${lastDate}` : 'http://localhost:8000/messages';
       const response = await fetch(urlWithDatetime);
-      const messagesUser: Props[] = await response.json();
 
-      const messagesWithKeys = messagesUser.map((message) => ({
+      if (!response.ok) {
+        console.error('Failed to fetch messages:', response.status, response.statusText);
+        return;
+      }
+
+      const newMessages: Message[] = await response.json();
+
+      const filteredNewMessages = newMessages.filter(
+        (newMsg) => !messagesUser.some((existingMsg) => existingMsg.id === newMsg.id)
+      );
+
+      const messagesWithKeys = filteredNewMessages.map((message) => ({
         ...message,
         id: generateRandomKey(),
       }));
 
-      setMessagesUser((prevMessages) => [...messagesWithKeys, ...prevMessages]);
+      setMessagesUser((prevMessages) => [...prevMessages, ...messagesWithKeys]);
+
       setLastDate(
-        messagesUser.length > 0 ? messagesUser[messagesUser.length - 1].datetime : lastDate
+        messagesWithKeys.length > 0 ? messagesWithKeys[messagesWithKeys.length - 1].datetime : lastDate
       );
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching messages:', error);
     }
   };
 
@@ -42,23 +50,21 @@ const GetMessages: React.FC<Props> = () => {
     const interval = setInterval(() => {
       void getMessages();
     }, 3000);
+
     return () => clearInterval(interval);
   }, [lastDate]);
 
   return (
-    <div>
-      <Button variant="contained" color="primary" onClick={getMessages}>
-        Refresh Messages
-      </Button>
+    <Container>
       {messagesUser.slice().reverse().map((message) => (
         <PostMessage
           key={message.id}
           message={message.message}
           author={message.author}
-          datetime={dayjs(message.datetime).format('DD.MM.YYYY HH:mm')}
+          datetime={message.datetime.slice(0, 16)}
         />
       ))}
-    </div>
+    </Container>
   );
 };
 
